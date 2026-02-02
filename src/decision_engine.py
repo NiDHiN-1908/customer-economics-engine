@@ -1,10 +1,12 @@
-def decide_action(clv, threshold=5000):
-    """
-    Simple decision rule:
-    If CLV > threshold → invest
-    Else → ignore
-    """
-    if clv > threshold:
-        return "INVEST"
-    else:
-        return "IGNORE"
+def optimize_budget(df, budget, cost_per_customer):
+    df_sorted = df.sort_values("CLV", ascending=False)
+
+    selected = []
+    spent = 0
+
+    for _, row in df_sorted.iterrows():
+        if spent + cost_per_customer <= budget:
+            selected.append(row["customer_id"])
+            spent += cost_per_customer
+
+    return selected
