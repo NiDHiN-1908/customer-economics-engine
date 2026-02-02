@@ -1,21 +1,23 @@
+from src.survival import survival_curve
+
 def compute_clv(monthly_revenue, churn_prob, months=12, discount_rate=0.10):
     """
-    Discounted CLV formula.
+    Full economic CLV with survival + discounting.
 
-    CLV = sum over t:
-    (revenue * survival) / (1 + discount_rate)^t
+    CLV = sum_t ( revenue * survival_t * discount_t )
+
+    survival_t comes from survival curve.
+    discount_t = 1 / (1 + r/12)^t
     """
 
-    survival = 1 - churn_prob
-    clv = 0
-
+    survival_probs = survival_curve(churn_prob, months)
     monthly_discount = discount_rate / 12
 
-    for t in range(1, months + 1):
-        discounted_value = (
-            monthly_revenue * survival
-        ) / ((1 + monthly_discount) ** t)
+    clv = 0
 
-        clv += discounted_value
+    for t in range(1, months + 1):
+        survival_t = survival_probs[t - 1]
+        discount_t = 1 / ((1 + monthly_discount) ** t)
+        clv += monthly_revenue * survival_t * discount_t
 
     return clv
