@@ -20,7 +20,9 @@ st.caption("Risk-Aware CLV Strategy Comparison")
 budget = st.slider("Marketing Budget (₹)", 0, 50000, 10000, step=1000)
 
 # Load data
-df = load_fake_data()
+from src.data_pipeline import prepare_system_data
+df = prepare_system_data()
+
 
 # Compute CLV
 df["CLV"] = df.apply(
