@@ -1,47 +1,51 @@
-# Customer Lifetime Value (CLV) Prediction
+# Customer Economics Engine
+
+**An Integrated Decision System for Churn-Driven CLV Optimization**
 
 ## Overview
-This project focuses on estimating Customer Lifetime Value (CLV) using historical transaction data.
-The objective is to identify high-value customers and support data-driven retention and revenue strategies.
 
-## Dataset
-The project uses a transactional retail dataset containing customer purchases over time.
-The raw dataset is not included in this repository due to file size limitations.
-It can be downloaded from the Online Retail Dataset available on Kaggle or the UCI Machine Learning Repository.
+Customer Economics Engine is an end-to-end decision support system designed to estimate **expected discounted profit per customer (Customer Lifetime Value)** and use it to **optimize marketing and retention strategies**. Unlike traditional CLV projects that focus only on prediction, this system treats CLV as a **business optimization problem**, where model outputs directly drive financial decisions.
 
-## Feature Engineering
-Customer-level features were created using the RFM framework:
-- Recency: Days since the most recent purchase
-- Frequency: Number of unique transactions
-- Monetary: Total spending per customer
+The system integrates churn-based survival modeling with revenue and cost estimation to compute customer-level economic value under uncertainty. On top of this, a decision layer simulates alternative marketing strategies and evaluates them using profit and ROI metrics.
 
-## Modeling Approach
-CLV was framed as a regression problem.
-A Linear Regression model was trained using Recency and Frequency as predictors and Monetary value as the target variable.
+## System Inputs
 
-## Model Evaluation
-The model was evaluated using:
-- RMSE to measure average prediction error
-- R² score to assess explained variance
+The system expects the following core inputs:
 
-The focus was on interpretability and business relevance rather than over-optimizing accuracy.
+* `customer_id` – Unique customer identifier
+* `churn_probability` / survival curve – From churn model
+* `monthly_revenue` – Customer revenue or ARPU
+* `acquisition_cost` – Cost to acquire customer
+* `retention_cost` – Cost to retain customer
 
-## Customer Segmentation
-Predicted CLV values were used to segment customers into three groups:
-- Low Value
-- Medium Value
-- High Value
+## System Outputs
 
-Quantile-based segmentation ensured balanced and interpretable customer groups.
+For each customer, the system produces:
 
-## Business Insights
-- High Value customers contribute a disproportionate share of predicted revenue
-- Medium Value customers represent strong upsell and engagement opportunities
-- Low Value customers may require cost-efficient retention strategies
+* `CLV` – Expected discounted profit
+* `recommended_action` – Invest / Ignore
+* `expected_profit` – Monetary value under strategy
 
-## Project Links
-GitHub Repository:
-https://github.com/NiDHiN-1908/customer-lifetime-value-prediction
+## Architecture
 
-Portfolio:
-https://nidhin-1908.github.io/
+Data flows through the following pipeline:
+
+Data → Survival Model → Revenue & Cost Model → CLV Engine → Decision Engine → Dashboard
+
+All core logic is implemented as modular Python components inside the `src/` directory. The system is exposed through an interactive dashboard for real-time decision making.
+
+## Key Features
+
+* Churn-driven survival modeling
+* Profit-aware CLV estimation
+* Budget and ROI simulation
+* Risk-aware customer segmentation
+* Interactive decision dashboard
+
+## Objective
+
+The primary goal of this system is not to maximize prediction accuracy, but to **maximize business value** by answering the question:
+
+> *Where should a company spend money to achieve the highest return from its customers?*
+
+This project demonstrates how machine learning models can be transformed into a **real-world economic decision engine**.
