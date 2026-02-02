@@ -1,25 +1,17 @@
-from src.survival import survival_curve
-from src.cost import get_retention_cost
-
-def compute_clv(monthly_revenue, churn_prob, months=12, discount_rate=0.10):
+def compute_clv(monthly_revenue, churn_prob, discount_rate=0.01):
     """
-    Profit-aware discounted CLV with survival.
-
-    CLV = sum_t ( (revenue - retention_cost) 
-                  * survival_t 
-                  * discount_t )
+    Proper survival-based CLV.
+    No costs. No penalties. No hacks.
+    Pure expected future revenue.
     """
 
-    survival_probs = survival_curve(churn_prob, months)
-    monthly_discount = discount_rate / 12
-    retention_cost = get_retention_cost()
+    if churn_prob <= 0:
+        expected_lifetime = 60  # cap at 5 years
+    else:
+        expected_lifetime = 1 / churn_prob
 
     clv = 0
-
-    for t in range(1, months + 1):
-        survival_t = survival_probs[t - 1]
-        discount_t = 1 / ((1 + monthly_discount) ** t)
-        monthly_profit = monthly_revenue - retention_cost
-        clv += monthly_profit * survival_t * discount_t
+    for t in range(1, int(expected_lifetime) + 1):
+        clv += monthly_revenue / ((1 + discount_rate) ** t)
 
     return clv

@@ -1,6 +1,5 @@
 def get_retention_cost():
     """
-    Cost to retain one customer (₹).
-    Increased to force real budget trade-offs.
+    Cost to retain one customer.
     """
-    return 3000
+    return 500  # ₹500 per customer

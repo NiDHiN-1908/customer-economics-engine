@@ -6,7 +6,7 @@ import numpy as np
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 import streamlit as st
-from src.data_pipeline import load_fake_data
+from src.data_pipeline import prepare_system_data, check_db_connection
 from src.clv_engine import compute_clv
 from src.cost import get_retention_cost
 from src.decision_engine import optimize_budget_clv, optimize_budget_random
@@ -14,15 +14,20 @@ from src.decision_engine import optimize_budget_clv, optimize_budget_random
 st.set_page_config(page_title="Customer Economics Engine", layout="wide")
 
 st.title("Customer Economics Engine")
-st.caption("Risk-Aware CLV Strategy Comparison")
+st.caption("Production-style ML-powered Customer Decision System")
+
+# Health check
+db_status = check_db_connection()
+if db_status:
+    st.success("Database connected successfully.")
+else:
+    st.error("Database connection failed.")
 
 # Budget control
 budget = st.slider("Marketing Budget (₹)", 0, 50000, 10000, step=1000)
 
-# Load data
-from src.data_pipeline import prepare_system_data
+# Load REAL data
 df = prepare_system_data()
-
 
 # Compute CLV
 df["CLV"] = df.apply(
@@ -41,7 +46,7 @@ random_selected = optimize_budget_random(df, budget, cost_per_customer)
 def simulate_profit(selected_ids, n_sim=1000):
     profits = []
     for _ in range(n_sim):
-        noise = np.random.normal(1, 0.15)  # 15% volatility
+        noise = np.random.normal(1, 0.15)
         profit = df[df["customer_id"].isin(selected_ids)]["CLV"].sum()
         profits.append(profit * noise)
     return np.array(profits)
@@ -51,44 +56,25 @@ random_dist = simulate_profit(random_selected)
 
 # Stats
 clv_mean = clv_dist.mean()
-clv_low = np.percentile(clv_dist, 10)
-clv_high = np.percentile(clv_dist, 90)
-
 random_mean = random_dist.mean()
-random_low = np.percentile(random_dist, 10)
-random_high = np.percentile(random_dist, 90)
-
-# Improvement
 improvement_pct = ((clv_mean - random_mean) / random_mean) * 100
 
 # Display table
 st.subheader("Customer Table")
 st.dataframe(df, use_container_width=True)
 
+# Business decisions
+st.subheader("Business Decision")
+st.metric("Customers to Retain This Month", len(clv_selected))
+
 # Metrics
 col1, col2, col3 = st.columns(3)
-col1.metric("CLV Strategy (Expected ₹)", int(clv_mean))
-col2.metric("Random Strategy (Expected ₹)", int(random_mean))
+col1.metric("CLV Strategy Profit (₹)", int(clv_mean))
+col2.metric("Random Strategy Profit (₹)", int(random_mean))
 col3.metric("Improvement (%)", f"{improvement_pct:.2f}%")
 
-# Risk view
-st.subheader("Risk Analysis (10% – 90% Range)")
-
-risk_col1, risk_col2 = st.columns(2)
-risk_col1.metric("CLV Worst Case (₹)", int(clv_low))
-risk_col1.metric("CLV Best Case (₹)", int(clv_high))
-
-risk_col2.metric("Random Worst Case (₹)", int(random_low))
-risk_col2.metric("Random Best Case (₹)", int(random_high))
-
-# Insight
-if clv_mean > random_mean:
-    st.success("CLV-based strategy dominates even under uncertainty.")
-else:
-    st.warning("Random strategy performed better under uncertainty.")
-
 st.info(
-    "This version models uncertainty using Monte Carlo simulation. "
-    "Decisions are evaluated using expected value and risk bounds, "
-    "not single-point estimates."
+    "This system connects directly to a production database, "
+    "uses a real ML churn model, and outputs profit-optimized "
+    "customer retention decisions."
 )
