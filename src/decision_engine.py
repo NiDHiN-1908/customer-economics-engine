@@ -1,4 +1,8 @@
 def optimize_budget(df, budget, cost_per_customer):
+    """
+    Select customers with highest CLV under budget constraint.
+    Greedy knapsack (sorted by CLV).
+    """
     df_sorted = df.sort_values("CLV", ascending=False)
 
     selected = []
