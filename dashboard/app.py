@@ -8,12 +8,12 @@ import streamlit as st
 from src.data_pipeline import load_fake_data
 from src.clv_engine import compute_clv
 from src.cost import get_retention_cost
-from src.decision_engine import optimize_budget
+from src.decision_engine import optimize_budget_clv, optimize_budget_random
 
 st.set_page_config(page_title="Customer Economics Engine", layout="wide")
 
 st.title("Customer Economics Engine")
-st.caption("Optimize customer value. Maximize profit.")
+st.caption("CLV vs Random Strategy Comparison")
 
 # Budget control
 budget = st.slider("Marketing Budget (₹)", 0, 50000, 10000, step=1000)
@@ -27,29 +27,40 @@ df["CLV"] = df.apply(
     axis=1
 )
 
-# Optimization
+# Cost
 cost_per_customer = get_retention_cost()
-selected_customers = optimize_budget(df, budget, cost_per_customer)
 
-df["Action"] = df["customer_id"].apply(
-    lambda x: "INVEST" if x in selected_customers else "IGNORE"
-)
+# Strategies
+clv_selected = optimize_budget_clv(df, budget, cost_per_customer)
+random_selected = optimize_budget_random(df, budget, cost_per_customer)
 
-# Display
-st.subheader("Customer Decisions")
+# Compute profits
+clv_profit = df[df["customer_id"].isin(clv_selected)]["CLV"].sum()
+random_profit = df[df["customer_id"].isin(random_selected)]["CLV"].sum()
+
+# Improvement
+if random_profit > 0:
+    improvement_pct = ((clv_profit - random_profit) / random_profit) * 100
+else:
+    improvement_pct = 0
+
+# Display tables
+st.subheader("Customer Table")
 st.dataframe(df, use_container_width=True)
 
 # Metrics
-invest_df = df[df["Action"] == "INVEST"]
-total_profit = invest_df["CLV"].sum()
-spent_budget = len(invest_df) * cost_per_customer
-
 col1, col2, col3 = st.columns(3)
-col1.metric("Customers Selected", len(invest_df))
-col2.metric("Budget Spent (₹)", spent_budget)
-col3.metric("Expected Profit (₹)", int(total_profit))
+col1.metric("CLV Strategy Profit (₹)", int(clv_profit))
+col2.metric("Random Strategy Profit (₹)", int(random_profit))
+col3.metric("Improvement (%)", f"{improvement_pct:.2f}%")
+
+# Insight
+if clv_profit > random_profit:
+    st.success("CLV-based strategy outperforms random targeting.")
+else:
+    st.warning("Random strategy performed better in this run.")
 
 st.info(
-    "v1 system: budget-constrained optimization using CLV. "
-    "Next versions will include discounting, real churn models, and ROI comparison."
+    "This comparison demonstrates the economic value of using CLV-based decision making "
+    "instead of naive random customer targeting."
 )
